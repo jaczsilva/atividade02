@@ -91,7 +91,7 @@ pipeline {
                     -e MYSQL_DATABASE=atividade02 \
                     -e MYSQL_USERNAME=root \
                     -e MYSQL_PASSWORD=root \
-                    ${WEB_IMAGE}:latest
+                    ${WEB_IMAGE}:latest \
                 '''
             }
         }
