@@ -2,11 +2,13 @@ pipeline {
     agent any
 
     environment {
+        BASE_DIR = "atividade02"
+
         WEB_IMAGE = "atividade02-web"
         DB_IMAGE  = "atividade02-db"
 
-        WEB_DOCKERFILE = "web/Dockerfile.web"
-        DB_DOCKERFILE  = "db/Dockerfile.mysql"
+        WEB_DOCKERFILE = "${BASE_DIR}/web/Dockerfile.web"
+        DB_DOCKERFILE  = "${BASE_DIR}/db/Dockerfile.mysql"
 
         WEB_CONTAINER = "atividade02_web_app"
         DB_CONTAINER  = "atividade02_db_mysql"
@@ -32,6 +34,8 @@ pipeline {
         stage('Checkout') {
             steps {
                 checkout scm
+                sh 'pwd && ls -la'
+                sh 'echo "Conteúdo de atividade02/:" && ls -la ${BASE_DIR}'
             }
         }
 
@@ -41,9 +45,9 @@ pipeline {
                     echo "[BUILD] Criando rede..."
                     docker network create ${NETWORK} || true
 
-                    echo "[BUILD] Build das imagens..."
-                    docker build -t ${DB_IMAGE}:latest -f ${DB_DOCKERFILE} .
-                    docker build -t ${WEB_IMAGE}:latest -f ${WEB_DOCKERFILE} .
+                    echo "[BUILD] Build das imagens (usando contexto atividade02/)..."
+                    docker build -t ${DB_IMAGE}:latest -f ${DB_DOCKERFILE} ${BASE_DIR}
+                    docker build -t ${WEB_IMAGE}:latest -f ${WEB_DOCKERFILE} ${BASE_DIR}
                 '''
             }
         }
@@ -52,10 +56,22 @@ pipeline {
             steps {
                 sh '''
                     echo "[DELIVERY] Subindo banco..."
-                    docker run -d --name ${DB_CONTAINER} --network ${NETWORK}                         -e MYSQL_ROOT_PASSWORD=root                         -e MYSQL_DATABASE=atividade02                         ${DB_IMAGE}:latest
+                    docker run -d --name ${DB_CONTAINER} --network ${NETWORK} \
+                        -e MYSQL_ROOT_PASSWORD=root \
+                        -e MYSQL_DATABASE=atividade02 \
+                        ${DB_IMAGE}:latest
+
+                    echo "[DELIVERY] Aguardando DB subir..."
+                    sleep 10
 
                     echo "[DELIVERY] Subindo aplicação web..."
-                    docker run -d --name ${WEB_CONTAINER} --network ${NETWORK}                         -p 5000:5000                         -e DB_HOST=${DB_CONTAINER}                         -e DB_NAME=atividade02                         -e DB_USER=root                         -e DB_PASS=root                         ${WEB_IMAGE}:latest
+                    docker run -d --name ${WEB_CONTAINER} --network ${NETWORK} \
+                        -p 5000:5000 \
+                        -e DB_HOST=${DB_CONTAINER} \
+                        -e DB_NAME=atividade02 \
+                        -e DB_USER=root \
+                        -e DB_PASS=root \
+                        ${WEB_IMAGE}:latest
                 '''
             }
         }
