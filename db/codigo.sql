@@ -1,5 +1,5 @@
-CREATE DATABASE docker_e_kubernetes;
-
+CREATE DATABASE IF NOT EXISTS docker_e_kubernetes
+  CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE docker_e_kubernetes;
 
 CREATE TABLE atividade02 (
