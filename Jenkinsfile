@@ -71,18 +71,23 @@ pipeline {
                         ${DB_IMAGE}:latest
 
                     echo "[DELIVERY] Aguardando DB subir..."
-                    sleep 10
+                    sleep 25
 
                     echo "[DELIVERY] Subindo aplicação web..."
                     docker run -d --name ${WEB_CONTAINER} --network ${NETWORK} \
                     -p 5000:5000 \
                     \
+                    # Variáveis no padrão DB_* (se seu main.py usar)
                     -e DB_HOST=${DB_CONTAINER} \
                     -e DB_NAME=atividade02 \
                     -e DB_USER=root \
                     -e DB_PASS=root \
                     \
+                    # Variáveis no padrão MYSQL_* (cobrir todos os nomes comuns)
+                    -e MYSQL_ADDRESS=${DB_CONTAINER} \
                     -e MYSQL_HOST=${DB_CONTAINER} \
+                    -e MYSQL_SERVER=${DB_CONTAINER} \
+                    -e MYSQL_PORT=3306 \
                     -e MYSQL_DATABASE=atividade02 \
                     -e MYSQL_USERNAME=root \
                     -e MYSQL_PASSWORD=root \
