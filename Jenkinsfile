@@ -19,6 +19,10 @@ pipeline {
     WEB_CONTAINER = "atividade02_web_app"
     DB_CONTAINER  = "atividade02_db_mysql"
     VOLUME_NAME   = "atividade02_mysql_data"
+
+    // Credenciais do MySQL
+    MYSQL_ROOT_PASSWORD = "root"
+    MYSQL_DATABASE_NAME = "docker_e_kubernetes"
   }
 
   stages {
@@ -75,16 +79,16 @@ pipeline {
 
           echo "[DELIVERY] Subindo banco (imagem custom) ..."
           docker run -d --name ${DB_CONTAINER} --network ${NETWORK} \
-            -e MYSQL_ROOT_PASSWORD=root \
-            -e MYSQL_DATABASE=docker_e_kubernetes \
+            -e MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD} \
+            -e MYSQL_DATABASE=${MYSQL_DATABASE_NAME} \
             -v ${VOLUME_NAME}:/var/lib/mysql \
             ${DB_IMAGE}:latest \
             --character-set-server=utf8mb4 \
             --collation-server=utf8mb4_unicode_ci
 
-          echo "[DELIVERY] Aguardando DB responder mysqladmin ping..."
-          ATTEMPTS=30
-          until docker exec ${DB_CONTAINER} sh -lc "mysqladmin ping -uroot -proot --silent" ; do
+          echo "[DELIVERY] Aguardando DB responder mysqladmin ping (via TCP)..."
+          ATTEMPTS=40
+          until docker exec ${DB_CONTAINER} sh -lc "mysqladmin --protocol=TCP -h 127.0.0.1 -u root -p${MYSQL_ROOT_PASSWORD} ping --silent" ; do
             ATTEMPTS=$((ATTEMPTS-1))
             if [ $ATTEMPTS -le 0 ]; then
               echo "[ERROR] MySQL não respondeu a tempo. Logs:"
@@ -96,19 +100,22 @@ pipeline {
           done
           echo "[OK] MySQL respondeu ao ping."
 
-          echo "[CHECK] Conferindo se a base/tabela existem..."
-          # Cria DB se não existir (idempotente)
-          docker exec ${DB_CONTAINER} sh -lc "mysql -uroot -proot -e \\"CREATE DATABASE IF NOT EXISTS docker_e_kubernetes CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;\\""
+          echo "[CHECK] Conferindo/forçando criação de base (via TCP)..."
+          docker exec ${DB_CONTAINER} sh -lc "mysql --protocol=TCP -h 127.0.0.1 -u root -p${MYSQL_ROOT_PASSWORD} -e \\
+            \\"CREATE DATABASE IF NOT EXISTS ${MYSQL_DATABASE_NAME} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;\\""
 
-          EXISTE=$(docker exec ${DB_CONTAINER} sh -lc "mysql -N -uroot -proot -e \\"USE docker_e_kubernetes; SHOW TABLES LIKE 'atividade02';\\"")
+          echo "[CHECK] Conferindo se a tabela 'atividade02' existe..."
+          EXISTE=$(docker exec ${DB_CONTAINER} sh -lc "mysql --protocol=TCP -h 127.0.0.1 -u root -p${MYSQL_ROOT_PASSWORD} -N -e \\
+            \\"USE ${MYSQL_DATABASE_NAME}; SHOW TABLES LIKE 'atividade02';\\"")
+
           if [ -z "$EXISTE" ]; then
             echo "[APPLY] Tabela não encontrada. Tentando aplicar schema do init..."
             if docker exec ${DB_CONTAINER} sh -lc "[ -f /docker-entrypoint-initdb.d/01_schema.sql ]" ; then
-              docker exec ${DB_CONTAINER} sh -lc "mysql --default-character-set=utf8mb4 -uroot -proot < /docker-entrypoint-initdb.d/01_schema.sql"
+              docker exec ${DB_CONTAINER} sh -lc "mysql --default-character-set=utf8mb4 --protocol=TCP -h 127.0.0.1 -u root -p${MYSQL_ROOT_PASSWORD} < /docker-entrypoint-initdb.d/01_schema.sql"
             else
               echo "[FALLBACK] 01_schema.sql não está na imagem. Criando tabela mínima via SQL inline."
-              docker exec ${DB_CONTAINER} sh -lc "mysql -uroot -proot -e \\
-                \\"USE docker_e_kubernetes; \\
+              docker exec ${DB_CONTAINER} sh -lc "mysql --protocol=TCP -h 127.0.0.1 -u root -p${MYSQL_ROOT_PASSWORD} -e \\
+                \\"USE ${MYSQL_DATABASE_NAME}; \\
                 CREATE TABLE IF NOT EXISTS atividade02 ( \\
                   ID INT PRIMARY KEY, \\
                   FirstName VARCHAR(30) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL, \\
@@ -121,7 +128,8 @@ pipeline {
           fi
 
           echo "[VERIFY] Tabelas atuais:"
-          docker exec ${DB_CONTAINER} sh -lc "mysql -uroot -proot -e \\"USE docker_e_kubernetes; SHOW TABLES;\\""
+          docker exec ${DB_CONTAINER} sh -lc "mysql --protocol=TCP -h 127.0.0.1 -u root -p${MYSQL_ROOT_PASSWORD} -e \\
+            \\"USE ${MYSQL_DATABASE_NAME}; SHOW TABLES;\\""
 
           echo "[DELIVERY] Descobrindo IP do DB..."
           DB_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' ${DB_CONTAINER} || true)
@@ -137,21 +145,21 @@ pipeline {
           echo "[DELIVERY] Subindo aplicação web..."
           docker run -d --name ${WEB_CONTAINER} --network ${NETWORK} ${ADD_HOST_ARG} -p 5000:5000 \
             -e DB_HOST=${DB_CONTAINER} \
-            -e DB_NAME=docker_e_kubernetes \
+            -e DB_NAME=${MYSQL_DATABASE_NAME} \
             -e DB_USER=root \
-            -e DB_PASS=root \
+            -e DB_PASS=${MYSQL_ROOT_PASSWORD} \
             -e MYSQL_ADDRESS=${DB_CONTAINER} \
             -e MYSQL_HOST=${DB_CONTAINER} \
             -e MYSQL_SERVER=${DB_CONTAINER} \
             -e MYSQL_ADDR=${DB_IP} \
             -e MYSQL_PORT=3306 \
-            -e MYSQL_DATABASE=docker_e_kubernetes \
-            -e MYSQL_DBNAME=docker_e_kubernetes \
-            -e MYSQL_DB=docker_e_kubernetes \
+            -e MYSQL_DATABASE=${MYSQL_DATABASE_NAME} \
+            -e MYSQL_DBNAME=${MYSQL_DATABASE_NAME} \
+            -e MYSQL_DB=${MYSQL_DATABASE_NAME} \
             -e MYSQL_USERNAME=root \
             -e MYSQL_USER=root \
-            -e MYSQL_PASSWORD=root \
-            -e MYSQL_PASS=root \
+            -e MYSQL_PASSWORD=${MYSQL_ROOT_PASSWORD} \
+            -e MYSQL_PASS=${MYSQL_ROOT_PASSWORD} \
             ${WEB_IMAGE}:latest
 
           echo "[INFO] Containers no ar:"
@@ -166,11 +174,13 @@ pipeline {
       echo "[POST] Estado final dos containers/imagens:"
       sh 'docker ps -a || true'
       sh 'docker images || true'
-      echo "[POST] Teste rápido de conectividade DB/tabela:"
+      echo "[POST] Teste rápido de conectividade DB/tabela (via TCP):"
       sh '''
         set +e
-        docker exec ${DB_CONTAINER} sh -lc "mysql -uroot -proot -e \\"USE docker_e_kubernetes; SELECT COUNT(*) AS registros FROM atividade02;\\"" || true
+        docker exec ${DB_CONTAINER} sh -lc "mysql --protocol=TCP -h 127.0.0.1 -u root -p${MYSQL_ROOT_PASSWORD} -e \\"USE ${MYSQL_DATABASE_NAME}; SELECT COUNT(*) AS registros FROM atividade02;\\"" || true
       '''
+      echo "[POST] Logs do MySQL (últimas 60 linhas):"
+      sh 'docker logs --tail 60 ${DB_CONTAINER} || true'
     }
   }
 }
