@@ -1,3 +1,8 @@
-FROM mysql
+FROM mysql:8
 
-COPY codigo.sql docker-entrypoint-initdb.d/
+ENV MYSQL_ROOT_PASSWORD=root
+ENV MYSQL_DATABASE=docker_e_kubernetes
+
+COPY my.cnf /etc/mysql/conf.d/my.cnf
+
+COPY codigo.sql /docker-entrypoint-initdb.d/01_schema.sql
