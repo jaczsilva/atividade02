@@ -9,10 +9,10 @@
 
 ### 1.1. Jenkins instalado e desbloqueado
 Evidência:  
-![Instalação Jenkins](img/tela1-instalacaoplugins.png)
-![Instalação Jenkins 2](img/tela2-instalacaoJenkins.png)
-![Configuração Jenkins TCP](img/tela3-apontandoJenkinsTCP.png)
-![Teste Versão Jenkins](img/tela4-testeVersaoJenkins.png)
+![Instalação Jenkins](../img/tela1-instalacaoplugins.png)
+![Instalação Jenkins 2](../img/tela2-instalacaoJenkins.png)
+![Configuração Jenkins TCP](../img/tela3-apontandoJenkinsTCP.png)
+![Teste Versão Jenkins](../img/tela4-testeVersaoJenkins.png)
 
 ### 1.2. Plugins instalados (Git, Pipeline, Docker)
 Evidência:  
