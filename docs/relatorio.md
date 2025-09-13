@@ -9,10 +9,10 @@
 
 ### 1.1. Jenkins instalado e desbloqueado
 Evidência:  
-![Unlock Jenkins](img/tela1-instalacaoplugins.png)
-![Unlock Jenkins](img/tela2-instalacaoJenkins.png)
-![Unlock Jenkins](img/tela3-apontandoJenkinsTCP.png)
-![Unlock Jenkins](img/tela4-testeVersaoJenkins.png)
+(img/tela1-instalacaoplugins.png)
+(img/tela2-instalacaoJenkins.png)
+(img/tela3-apontandoJenkinsTCP.png)
+(img/tela4-testeVersaoJenkins.png)
 
 ### 1.2. Plugins instalados (Git, Pipeline, Docker)
 Evidência:  
