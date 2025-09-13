@@ -62,19 +62,42 @@ pipeline {
 }
 
         stage('Entrega') {
-            steps {
-                sh '''
-                    echo "[DELIVERY] Subindo banco..."
-                    docker run -d --name ${WEB_CONTAINER} --network ${NETWORK} -p 5000:5000 \
-                    -e DB_HOST=${DB_CONTAINER} -e DB_NAME=atividade02 -e DB_USER=root -e DB_PASS=root \
-                    -e MYSQL_ADDRESS=${DB_CONTAINER} -e MYSQL_HOST=${DB_CONTAINER} -e MYSQL_SERVER=${DB_CONTAINER} -e MYSQL_ADDR=${DB_CONTAINER} \
-                    -e MYSQL_PORT=3306 \
-                    -e MYSQL_DATABASE=atividade02 -e MYSQL_DBNAME=atividade02 -e MYSQL_DB=atividade02 \
-                    -e MYSQL_USERNAME=root -e MYSQL_USER=root \
-                    -e MYSQL_PASSWORD=root -e MYSQL_PASS=root \
-                    ${WEB_IMAGE}:latest
-                '''
-            }
-        }
-    }
+  steps {
+    sh '''
+      echo "[DELIVERY] Subindo banco..."
+      docker run -d --name ${DB_CONTAINER} --network ${NETWORK} \
+        -e MYSQL_ROOT_PASSWORD=root \
+        -e MYSQL_DATABASE=atividade02 \
+        ${DB_IMAGE}:latest
+
+      echo "[DELIVERY] Aguardando DB subir..."
+      sleep 30
+
+      echo "[DELIVERY] Descobrindo IP do DB..."
+      DB_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' ${DB_CONTAINER})
+      echo "[DELIVERY] DB_IP=${DB_IP}"
+
+      echo "[DELIVERY] Subindo aplicação web..."
+      docker run -d --name ${WEB_CONTAINER} --network ${NETWORK} \
+        --add-host ${DB_CONTAINER}:${DB_IP} \
+        -p 5000:5000 \
+        -e DB_HOST=${DB_CONTAINER} \
+        -e DB_NAME=atividade02 \
+        -e DB_USER=root \
+        -e DB_PASS=root \
+        -e MYSQL_ADDRESS=${DB_CONTAINER} \
+        -e MYSQL_HOST=${DB_CONTAINER} \
+        -e MYSQL_SERVER=${DB_CONTAINER} \
+        -e MYSQL_ADDR=${DB_IP} \
+        -e MYSQL_PORT=3306 \
+        -e MYSQL_DATABASE=atividade02 \
+        -e MYSQL_DBNAME=atividade02 \
+        -e MYSQL_DB=atividade02 \
+        -e MYSQL_USERNAME=root \
+        -e MYSQL_USER=root \
+        -e MYSQL_PASSWORD=root \
+        -e MYSQL_PASS=root \
+        ${WEB_IMAGE}:latest
+    '''
+  }
 }
