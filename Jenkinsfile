@@ -67,9 +67,11 @@ pipeline {
 
           echo "[DELIVERY] Subindo banco..."
           docker run -d --name ${DB_CONTAINER} --network ${NETWORK} \
-            -e MYSQL_ROOT_PASSWORD=root \
-            -e MYSQL_DATABASE=docker_e_kubernetes \
-            ${DB_IMAGE}:latest
+          -e MYSQL_ROOT_PASSWORD=root \
+          -e MYSQL_DATABASE=docker_e_kubernetes \
+          mysql:8 \
+          --character-set-server=utf8mb4 \
+          --collation-server=utf8mb4_unicode_ci
 
           echo "[DELIVERY] Aguardando DB responder mysqladmin ping..."
           # ~60s (12 x 5s). Se falhar, mostra logs e aborta.
