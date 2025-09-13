@@ -75,12 +75,18 @@ pipeline {
 
                     echo "[DELIVERY] Subindo aplicação web..."
                     docker run -d --name ${WEB_CONTAINER} --network ${NETWORK} \
-                        -p 5000:5000 \
-                        -e DB_HOST=${DB_CONTAINER} \
-                        -e DB_NAME=atividade02 \
-                        -e DB_USER=root \
-                        -e DB_PASS=root \
-                        ${WEB_IMAGE}:latest
+                    -p 5000:5000 \
+                    \
+                    -e DB_HOST=${DB_CONTAINER} \
+                    -e DB_NAME=atividade02 \
+                    -e DB_USER=root \
+                    -e DB_PASS=root \
+                    \
+                    -e MYSQL_HOST=${DB_CONTAINER} \
+                    -e MYSQL_DATABASE=atividade02 \
+                    -e MYSQL_USERNAME=root \
+                    -e MYSQL_PASSWORD=root \
+                    ${WEB_IMAGE}:latest
                 '''
             }
         }
