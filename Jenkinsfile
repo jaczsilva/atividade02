@@ -61,37 +61,61 @@ pipeline {
     }
 
     stage('Entrega') {
-      steps {
-        sh '''
-          echo "[DELIVERY] Subindo banco..."
-          docker run -d --name ${DB_CONTAINER} --network ${NETWORK} \
-            -e MYSQL_ROOT_PASSWORD=root \
-            -e MYSQL_DATABASE=docker_e_kubernetes \
-            ${DB_IMAGE}:latest
+  steps {
+    sh '''
+      set -e
 
-          echo "[DELIVERY] Aguardando DB subir..."
-          sleep 30
+      echo "[DELIVERY] Subindo banco..."
+      docker run -d --name ${DB_CONTAINER} --network ${NETWORK} \
+        -e MYSQL_ROOT_PASSWORD=root \
+        -e MYSQL_DATABASE=docker_e_kubernetes \
+        ${DB_IMAGE}:latest
 
-          echo "[DELIVERY] Descobrindo IP do DB..."
-          DB_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' ${DB_CONTAINER})
-          echo "[DELIVERY] DB_IP=${DB_IP}"
+      echo "[DELIVERY] Aguardando DB responder mysqladmin ping..."
+      # Tenta por até ~60s (12 x 5s). Se falhar, mostra logs e aborta.
+      ATTEMPTS=12
+      until docker exec ${DB_CONTAINER} sh -c "mysqladmin ping -uroot -proot --silent" ; do
+        ATTEMPTS=$((ATTEMPTS-1))
+        if [ $ATTEMPTS -le 0 ]; then
+          echo "[ERROR] MySQL não respondeu a tempo. Logs:"
+          docker logs ${DB_CONTAINER} || true
+          exit 1
+        fi
+        echo "[WAIT] MySQL ainda iniciando... aguardando 5s"
+        sleep 5
+      done
+      echo "[OK] MySQL respondeu ao ping."
 
-          echo "[DELIVERY] Subindo aplicação web..."
-          # One-liner para não perder a imagem no final
-          docker run -d --name ${WEB_CONTAINER} --network ${NETWORK} --add-host ${DB_CONTAINER}:${DB_IP} -p 5000:5000 -e DB_HOST=${DB_CONTAINER} -e DB_NAME=docker_e_kubernetes -e DB_USER=root -e DB_PASS=root -e MYSQL_ADDRESS=${DB_CONTAINER} -e MYSQL_HOST=${DB_CONTAINER} -e MYSQL_SERVER=${DB_CONTAINER} -e MYSQL_ADDR=${DB_IP} -e MYSQL_PORT=3306 -e MYSQL_DATABASE=docker_e_kubernetes -e MYSQL_DBNAME=docker_e_kubernetes -e MYSQL_DB=docker_e_kubernetes -e MYSQL_USERNAME=root -e MYSQL_USER=root -e MYSQL_PASSWORD=root -e MYSQL_PASS=root ${WEB_IMAGE}:latest
-        '''
-      }
-    }
-  }
+      echo "[DELIVERY] Descobrindo IP do DB..."
+      DB_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' ${DB_CONTAINER} || true)
+      echo "[DELIVERY] DB_IP='${DB_IP}'"
 
-  post {
-    always {
-      sh '''
-        echo "[POST] docker ps -a:"
-        docker ps -a || true
-        echo "[POST] Logs web (tail 50):"
-        docker logs --tail 50 ${WEB_CONTAINER} || true
-      '''
-    }
+      ADD_HOST_ARG=""
+      if [ -n "${DB_IP}" ]; then
+        ADD_HOST_ARG="--add-host ${DB_CONTAINER}:${DB_IP}"
+      else
+        echo "[WARN] DB_IP vazio. Prosseguindo sem --add-host (confiaremos no DNS da rede Docker)."
+      fi
+
+      echo "[DELIVERY] Subindo aplicação web..."
+      docker run -d --name ${WEB_CONTAINER} --network ${NETWORK} ${ADD_HOST_ARG} -p 5000:5000 \
+        -e DB_HOST=${DB_CONTAINER} \
+        -e DB_NAME=docker_e_kubernetes \
+        -e DB_USER=root \
+        -e DB_PASS=root \
+        -e MYSQL_ADDRESS=${DB_CONTAINER} \
+        -e MYSQL_HOST=${DB_CONTAINER} \
+        -e MYSQL_SERVER=${DB_CONTAINER} \
+        -e MYSQL_ADDR=${DB_IP} \
+        -e MYSQL_PORT=3306 \
+        -e MYSQL_DATABASE=docker_e_kubernetes \
+        -e MYSQL_DBNAME=docker_e_kubernetes \
+        -e MYSQL_DB=docker_e_kubernetes \
+        -e MYSQL_USERNAME=root \
+        -e MYSQL_USER=root \
+        -e MYSQL_PASSWORD=root \
+        -e MYSQL_PASS=root \
+        ${WEB_IMAGE}:latest
+    '''
   }
 }
