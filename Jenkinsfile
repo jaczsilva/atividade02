@@ -52,8 +52,11 @@ pipeline {
       docker network create ${NETWORK} || true
 
       echo "[BUILD] Build das imagens (contextos dedicados)..."
-      docker build -t ${DB_IMAGE}:latest  -f ${DB_DOCKERFILE}  ${DB_CONTEXT}
-      docker build -t ${WEB_IMAGE}:latest -f ${WEB_DOCKERFILE} ${WEB_CONTEXT}
+      # DB: Dockerfile fica em db/Dockerfile.mysql e o contexto é a pasta db/
+      docker build -t ${DB_IMAGE}:latest  -f db/Dockerfile.mysql  db
+
+      # WEB: Dockerfile fica em web/Dockerfile.web e o contexto é a pasta web/
+      docker build -t ${WEB_IMAGE}:latest -f web/Dockerfile.web web
     '''
   }
 }
