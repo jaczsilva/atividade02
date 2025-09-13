@@ -2,18 +2,22 @@ pipeline {
     agent any
 
     environment {
-        BASE_DIR = "."
+    BASE_DIR = "."
+    WEB_IMAGE = "atividade02-web"
+    DB_IMAGE  = "atividade02-db"
 
-        WEB_IMAGE = "atividade02-web"
-        DB_IMAGE  = "atividade02-db"
+    // Dockerfiles
+    WEB_DOCKERFILE = "Dockerfile.web"
+    DB_DOCKERFILE  = "Dockerfile.mysql"
 
-        WEB_DOCKERFILE = "${BASE_DIR}/web/Dockerfile.web"
-        DB_DOCKERFILE  = "${BASE_DIR}/db/Dockerfile.mysql"
+    // Contextos (pastas) de build
+    WEB_CONTEXT = "web"
+    DB_CONTEXT  = "db"
 
-        WEB_CONTAINER = "atividade02_web_app"
-        DB_CONTAINER  = "atividade02_db_mysql"
-        NETWORK = "atividade02_net"
-    }
+    WEB_CONTAINER = "atividade02_web_app"
+    DB_CONTAINER  = "atividade02_db_mysql"
+    NETWORK = "atividade02_net"
+}
 
     stages {
         stage('Cleanup') {
@@ -42,17 +46,17 @@ pipeline {
         }
 
         stage('Construção') {
-            steps {
-                sh '''
-                    echo "[BUILD] Criando rede..."
-                    docker network create ${NETWORK} || true
+  steps {
+    sh '''
+      echo "[BUILD] Criando rede..."
+      docker network create ${NETWORK} || true
 
-                    echo "[BUILD] Build das imagens (contexto = RAIZ)..."
-                    docker build -t ${DB_IMAGE}:latest -f ${DB_DOCKERFILE} ${BASE_DIR}
-                    docker build -t ${WEB_IMAGE}:latest -f ${WEB_DOCKERFILE} ${BASE_DIR}
-                '''
-            }
-        }
+      echo "[BUILD] Build das imagens (contextos dedicados)..."
+      docker build -t ${DB_IMAGE}:latest  -f ${DB_DOCKERFILE}  ${DB_CONTEXT}
+      docker build -t ${WEB_IMAGE}:latest -f ${WEB_DOCKERFILE} ${WEB_CONTEXT}
+    '''
+  }
+}
 
         stage('Entrega') {
             steps {
