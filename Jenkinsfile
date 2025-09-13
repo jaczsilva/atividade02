@@ -65,10 +65,7 @@ pipeline {
             steps {
                 sh '''
                     echo "[DELIVERY] Subindo banco..."
-                    docker run -d --name ${DB_CONTAINER} --network ${NETWORK} \
-                      -e MYSQL_ROOT_PASSWORD=root \
-                      -e MYSQL_DATABASE=atividade02 \
-                      ${DB_IMAGE}:latest
+                    docker run -d --name ${WEB_CONTAINER} --network ${NETWORK} --add-host ${DB_CONTAINER}:${DB_IP} -p 5000:5000 -e DB_HOST=${DB_CONTAINER} -e DB_NAME=docker_e_kubernetes -e DB_USER=root -e DB_PASS=root -e MYSQL_ADDRESS=${DB_CONTAINER} -e MYSQL_HOST=${DB_CONTAINER} -e MYSQL_SERVER=${DB_CONTAINER} -e MYSQL_ADDR=${DB_IP} -e MYSQL_PORT=3306 -e MYSQL_DATABASE=docker_e_kubernetes -e MYSQL_DBNAME=docker_e_kubernetes -e MYSQL_DB=docker_e_kubernetes -e MYSQL_USERNAME=root -e MYSQL_USER=root -e MYSQL_PASSWORD=root -e MYSQL_PASS=root ${WEB_IMAGE}:latest
 
                     echo "[DELIVERY] Aguardando DB subir..."
                     sleep 30
