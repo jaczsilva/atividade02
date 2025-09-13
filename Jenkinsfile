@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        BASE_DIR = "atividade02"
+        BASE_DIR = "."
 
         WEB_IMAGE = "atividade02-web"
         DB_IMAGE  = "atividade02-db"
@@ -35,7 +35,9 @@ pipeline {
             steps {
                 checkout scm
                 sh 'pwd && ls -la'
-                sh 'echo "Conteúdo de atividade02/:" && ls -la ${BASE_DIR}'
+                sh 'echo "[DEBUG] Conteúdo da raiz:" && ls -la ${BASE_DIR}'
+                sh 'echo "[DEBUG] Conteúdo de web/:" && ls -la web || true'
+                sh 'echo "[DEBUG] Conteúdo de db/:" && ls -la db || true'
             }
         }
 
@@ -45,7 +47,7 @@ pipeline {
                     echo "[BUILD] Criando rede..."
                     docker network create ${NETWORK} || true
 
-                    echo "[BUILD] Build das imagens (usando contexto atividade02/)..."
+                    echo "[BUILD] Build das imagens (contexto = RAIZ)..."
                     docker build -t ${DB_IMAGE}:latest -f ${DB_DOCKERFILE} ${BASE_DIR}
                     docker build -t ${WEB_IMAGE}:latest -f ${WEB_DOCKERFILE} ${BASE_DIR}
                 '''
