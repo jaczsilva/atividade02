@@ -22,7 +22,7 @@ Jenkins Desbloqueado:
 
 ### 1.2. Plugins instalados (Git, Pipeline, Docker)
 Evidência:  
-![Plugins](../img/tela10-extensoes.mp4)
+![Plugins](../img/tela7-JenkinsComplementos)
 
 ### 1.3. Pipeline integrado ao GitHub (Pipeline script from SCM)
 Configuração:
