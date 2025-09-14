@@ -57,6 +57,7 @@ Após a execução do pipeline, o Console Output registrou todas as etapas do pr
 
 
 ![Build logs](../img/tela13-ConsoleOutput.png)
+![Pipeline Estágios](../img/tela9-PipelineEstagios.png)
 ![Evidência completa](../img/ConsoleOutput.txt)
 
 ### 2.2. Subida dos containers (Entrega)Evidência – Subida dos Containers (Entrega):
