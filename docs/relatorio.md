@@ -14,6 +14,12 @@ Evidência:
 ![Configuração Jenkins TCP](../img/tela3-apontandoJenkinsTCP.png)
 ![Teste Versão Jenkins](../img/tela4-testeVersaoJenkins.png)
 
+Configuração Pipeline:
+![Configuração Pipeline](../img/tela5-JenkinsConfiguracaoPipeline.png)
+
+Jenkins Desbloqueado:
+![Configuração Pipeline](../img/tela6-JenkinsDesbloqueado.png)
+
 ### 1.2. Plugins instalados (Git, Pipeline, Docker)
 Evidência:  
 ![Plugins](img/02_plugins.png)
