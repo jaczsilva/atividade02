@@ -59,19 +59,20 @@ Após a execução do pipeline, o Console Output registrou todas as etapas do pr
 ![Build logs](../img/tela13-ConsoleOutput.png)
 ![Evidência completa](../img/ConsoleOutput.txt)
 
-### 2.2. Subida dos containers (Entrega)
-Passos:
-1. Sobe o MySQL com `MYSQL_DATABASE=docker_e_kubernetes`
-2. Aguarda o DB responder (`mysqladmin ping` / `sleep`)
-3. Descobre IP do DB e sobe a web com variáveis `DB_*` / `MYSQL_*`
-4. Expõe a porta `5000:5000`
+### 2.2. Subida dos containers (Entrega)Evidência – Subida dos Containers (Entrega):
+A partir da configuração definida no Dockerfile, docker-compose.yml e Jenkinsfile, os containers foram construídos e executados com sucesso pelo Jenkins.
+O Console Output da pipeline registra a criação e inicialização, finalizando com status SUCCESS.
+Adicionalmente, a execução do comando 'docker ps' confirma a presença dos containers ativos, conforme mostrado abaixo:
 
 Evidência (Console Output Jenkins):  
-![Run containers](img/07_run_logs.png)
+![Run containers](../img/tela14-EvidenciaDockerPs.png)
 
 ### 2.3. Verificações no host
-Comandos executados:
-```bash
-docker ps -a
-docker logs --tail 30 atividade02_web_app
-docker inspect -f "{{json .NetworkSettings.Ports}}" atividade02_web_app
+Para garantir a execução adequada do container, foram realizadas verificações no ambiente host.
+O comando 'docker --version' confirmou a instalação correta do Docker.
+O status do serviço Docker indicou que o daemon encontrava-se em execução.
+
+O comando 'wmic logicaldisk get size,freespace,caption' demonstrou disponibilidade suficiente de espaço em disco.
+
+Por fim, o comando 'docker ps' evidenciou o container jenkins-lts-custom em execução.
+![Comandos](../img/tela15-EvidenciaDocker.png)
