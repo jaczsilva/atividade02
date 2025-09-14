@@ -74,5 +74,13 @@ O status do serviço Docker indicou que o daemon encontrava-se em execução.
 
 O comando 'wmic logicaldisk get size,freespace,caption' demonstrou disponibilidade suficiente de espaço em disco.
 
-Por fim, o comando 'docker ps' evidenciou o container jenkins-lts-custom em execução.
+O comando 'docker ps' evidenciou o container jenkins-lts-custom em execução.
 ![Comandos](../img/tela15-EvidenciaDocker.png)
+
+
+Perguntas:
+1. Como a automação dos processos de integração, entrega e implantação contínuas auxiliam o desenvolvimento de software no longo prazo?
+A automação ajuda porque diminui erros manuais, deixa as entregas mais rápidas e padronizadas e facilita encontrar problemas cedo. No longo prazo, isso dá mais confiança no código e melhora a produtividade da equipe.
+
+2. Como poderíamos realizar telemetria do nosso pipeline?
+A telemetria pode ser feita coletando dados das execuções, como tempo de build, falhas e uso de recursos. Isso pode ser monitorado em ferramentas de logs, dashboards ou até integrado ao Jenkins para acompanhar a saúde do pipeline.
