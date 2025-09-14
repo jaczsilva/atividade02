@@ -41,8 +41,8 @@ Pastas-chave:
 
 Evidências:  
 ![Repo tree](../img/tela11-EstruturaGitHub.png)  
-![Commits](img/05_commits.png)
-
+![Commits](../img/tela12-Commits.png)
+[Histórico de Commits](https://github.com/jaczsilva/atividade02/commits/main)
 ---
 
 ## 2. Entrega Contínua (CD)
@@ -53,7 +53,11 @@ A pipeline executa:
 - `docker build -t atividade02-web:latest -f web/Dockerfile.web web`
 
 Evidência (Console Output Jenkins):  
-![Build logs](img/06_build_logs.png)
+Após a execução do pipeline, o Console Output registrou todas as etapas do processo. O trecho final do log comprova que o código foi executado com sucesso, encerrando a build com status SUCCESS.
+
+
+![Build logs](../img/tela13-ConsoleOutput.png)
+![Evidência completa](../img/ConsoleOutput.txt)
 
 ### 2.2. Subida dos containers (Entrega)
 Passos:
