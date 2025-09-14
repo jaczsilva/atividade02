@@ -40,7 +40,7 @@ Pastas-chave:
 - `Jenkinsfile` – pipeline declarativa
 
 Evidências:  
-![Repo tree](img/04_repo_tree.png)  
+![Repo tree](../img/tela11-EstruturaGitHub.png)  
 ![Commits](img/05_commits.png)
 
 ---
